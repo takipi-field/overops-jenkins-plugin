@@ -33,6 +33,7 @@ import hudson.FilePath;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepMonitor;
+import hudson.util.Secret;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 import javax.ws.rs.client.Client;
@@ -137,8 +138,8 @@ public class QueryOverOps extends hudson.tasks.Recorder implements SimpleBuildSt
 		String OverOpsURL = getDescriptor().getOverOpsURL();
 		String OverOpsSID = getDescriptor().getOverOpsSID();
 		String OverOpsUser = getDescriptor().getOverOpsUser();
-		String OverOpsPWD = getDescriptor().getOverOpsPWD();
-		String OOAPIKey = getDescriptor().getOOAPIKey();
+		String OverOpsPWD = Secret.toString(getDescriptor().getOverOpsPWD());
+		String OOAPIKey = Secret.toString(getDescriptor().getOOAPIKey());
 
 		// Time Formatter for OverOps REST API
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm").withZone(ZoneId.of("UTC"));

@@ -4,8 +4,10 @@ import java.io.IOException;
 
 import javax.servlet.ServletException;
 
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.verb.POST;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -16,19 +18,21 @@ import hudson.model.AbstractProject;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
+import hudson.util.Secret;
+import jenkins.model.Jenkins;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 //DescriptorImpl governs the global config settings
 
-@Extension
+@Extension @Symbol("OverOpsQuery")
 public final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
 	private String OverOpsURL;
 	private String OverOpsUser;
-	private String OverOpsPWD;
+	private Secret OverOpsPWD;
 	private String OverOpsSID;
-	private String OOAPIKey;
+	private Secret OOAPIKey;
 
 	public DescriptorImpl() {
 		super(QueryOverOps.class);
@@ -51,9 +55,9 @@ public final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 		formData = formData.getJSONObject("QueryOverOps");
 		OverOpsURL = formData.getString("OverOpsURL");
 		OverOpsUser = formData.getString("OverOpsUser");
-		OverOpsPWD = formData.getString("OverOpsPWD");
+		OverOpsPWD = Secret.fromString(formData.getString("OverOpsPWD"));
 		OverOpsSID = formData.getString("OverOpsSID");
-		OOAPIKey = formData.getString("OOAPIKey");
+		OOAPIKey = Secret.fromString(formData.getString("OOAPIKey"));
 		save();
 		return false;
 	}
@@ -66,7 +70,7 @@ public final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 		return OverOpsUser;
 	}
 
-	public String getOverOpsPWD() {
+	public Secret getOverOpsPWD() {
 		return OverOpsPWD;
 	}
 
@@ -74,7 +78,7 @@ public final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 		return OverOpsSID;
 	}
 
-	public String getOOAPIKey() {
+	public Secret getOOAPIKey() {
 		return OOAPIKey;
 	}
 
@@ -86,7 +90,7 @@ public final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 		this.OverOpsUser = OverOpsUser;
 	}
 
-	public void setOverOpsPWD(String OverOpsPWD) {
+	public void setOverOpsPWD(Secret OverOpsPWD) {
 		this.OverOpsPWD = OverOpsPWD;
 	}
 
@@ -94,30 +98,32 @@ public final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 		this.OverOpsSID = OverOpsSID;
 	}
 
-	public void setOOAPIKey(String OOAPIKey) {
+	public void setOOAPIKey(Secret OOAPIKey) {
 		this.OOAPIKey = OOAPIKey;
 	}
-
+	
+	@POST
 	public FormValidation doTestConnection(@QueryParameter("OverOpsURL") final String OverOpsURL,
 			@QueryParameter("OverOpsUser") final String OverOpsUser,
-			@QueryParameter("OverOpsPWD") final String OverOpsPWD, @QueryParameter("OOAPIKey") final String OOAPIKey)
+			@QueryParameter("OverOpsPWD") final Secret OverOpsPWD, @QueryParameter("OOAPIKey") final Secret OOAPIKey)
 			throws ServletException, IOException, InterruptedException {
-
+			//Admin permission check
+			Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER); 
 		try {
 			Client OverOpsApiClient = ClientBuilder.newClient();
 
-			String usernameAndPassword = OverOpsUser + ":" + OverOpsPWD;
+			String usernameAndPassword = OverOpsUser + ":" + Secret.toString(OverOpsPWD);
 
 			String authorizationHeaderValue;
 			String keyName;
 
-			if (OOAPIKey == null || OOAPIKey.isEmpty() ) {
+			if (Secret.toString(OOAPIKey) == null || Secret.toString(OOAPIKey).isEmpty() ) {
 				keyName = "Authorization";
 				authorizationHeaderValue = "Basic "
 						+ java.util.Base64.getEncoder().encodeToString(usernameAndPassword.getBytes("utf-8"));
 			} else {
 				keyName = "X-API-Key";
-				authorizationHeaderValue = OOAPIKey;
+				authorizationHeaderValue = Secret.toString(OOAPIKey) ;
 
 			}
 
