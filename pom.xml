@@ -24,7 +24,6 @@
 			by the plugin. -->
 	</properties>
 	<description>This plugin will check a build for errors in OverOps.</description>
-	<url>https://wiki.jenkins-ci.org/display/JENKINS/overops-query-plugin</url>
 	<!-- The default licence for Jenkins OSS Plugins is MIT. Substitute for 
 		the applicable one if needed. -->
 	<licenses>
@@ -190,4 +189,5 @@
 	</build>
 	<groupId>org.overops.plugins</groupId>
 	<name>overops-query-plugin</name>
+	<url>https://wiki.jenkins.io/display/JENKINS/OverOps+Query+Plugin</url>
 </project>
