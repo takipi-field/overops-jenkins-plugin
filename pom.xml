@@ -187,6 +187,6 @@
 		</pluginManagement>
 	</build>
 	<groupId>org.overops.plugins</groupId>
-	<name>overops-query-plugin</name>
+	<name>OverOps Query Plugin</name>
 	<url>https://wiki.jenkins.io/display/JENKINS/OverOps+Query+Plugin</url>
 </project>
