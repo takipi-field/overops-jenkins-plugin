@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.jenkins-ci.plugins</groupId>
@@ -8,7 +9,7 @@
 		<version>3.2</version>
 	</parent>
 	<artifactId>overops-query</artifactId>
-	<version>0.16-SNAPSHOT</version>
+	<version>0.15-SNAPSHOT</version>
 	<packaging>hpi</packaging>
 	<properties>
 		<!-- Baseline Jenkins version you use to build the plugin. Users must have 
@@ -16,7 +17,8 @@
 		<jenkins.version>1.651.3</jenkins.version>
 		<java.level>8</java.level>
 		<!-- Other properties you may want to use: ~ java.level: set to 6 if your 
-			jenkins.version <= 1.611 ~ jenkins-test-harness.version: Jenkins Test Harness version you use to test the plugin. For Jenkins version >= 1.580.1 use JTH 
+			jenkins.version <= 1.611 ~ jenkins-test-harness.version: Jenkins Test Harness 
+			version you use to test the plugin. For Jenkins version >= 1.580.1 use JTH 
 			2.0 or higher. ~ hpi-plugin.version: The HPI Maven Plugin version used by 
 			the plugin.. ~ stapler-plugin.version: The Stapler Maven plugin version required 
 			by the plugin. -->
@@ -134,8 +136,7 @@
 		<connection>scm:git:ssh://github.com/jenkinsci/overops-query-plugin.git</connection>
 		<developerConnection>scm:git:ssh://git@github.com/jenkinsci/overops-query-plugin.git</developerConnection>
 		<url>https://github.com/jenkinsci/overops-query-plugin</url>
-	  <tag>HEAD</tag>
-  </scm>
+	</scm>
 	<repositories>
 		<repository>
 			<id>repo.jenkins-ci.org</id>
@@ -176,7 +177,7 @@
 										</goals>
 									</pluginExecutionFilter>
 									<action>
-										<ignore />
+										<ignore></ignore>
 									</action>
 								</pluginExecution>
 							</pluginExecutions>
