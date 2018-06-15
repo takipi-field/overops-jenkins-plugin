@@ -95,7 +95,7 @@ public class QueryOverOps extends hudson.tasks.Recorder implements SimpleBuildSt
 	}
 
 	public int getmaxNewEventCount() {
-		return maxEventCount;
+		return maxNewEventCount;
 	}
 
 	public int getRetryInt() {
