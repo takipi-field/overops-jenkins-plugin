@@ -270,7 +270,7 @@ public class QueryOverOps extends hudson.tasks.Recorder implements SimpleBuildSt
 			}
 			// Validate Query results
 			listener.getLogger().println(
-					"OverOps found " + EventList.size() + " events in " + OOappName + " deployment " + deployName);
+					"OverOps found " + EventList.size() + " events in " + OOappName + " deployment " + deployNameEnv);
 			if (EventList.size() > maxEventCount && maxEventCount != -1) {
 				listener.getLogger().println("\n");
 				listener.getLogger().println("Event threshold " + maxEventCount + " Exceeded");
@@ -285,7 +285,7 @@ public class QueryOverOps extends hudson.tasks.Recorder implements SimpleBuildSt
 				x = RetryCount;
 			}
 			listener.getLogger().println(
-					"OverOps found " + NewEventList.size() + " new events in " + OOappName + " deployment " + deployName);
+					"OverOps found " + NewEventList.size() + " new events in " + OOappName + " deployment " + deployNameEnv);
 			if (NewEventList.size() > maxNewEventCount && maxNewEventCount != -1) {
 				listener.getLogger().println("\n");
 				listener.getLogger().println("New Event threshold " + maxNewEventCount + " Exceeded");
@@ -306,7 +306,7 @@ public class QueryOverOps extends hudson.tasks.Recorder implements SimpleBuildSt
 
 		}
 		listener.getLogger().println();
-		listener.getLogger().println("Total Events found in OverOps: " + EventList.size());
+		listener.getLogger().println("Total Events found in OverOps for build " + deployNameEnv + ": " + EventList.size());
 		listener.getLogger().println("New Events Introduced by " + deployNameEnv + ": " + NewEventList.size());
 	}
 
