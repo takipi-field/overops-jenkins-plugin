@@ -43,4 +43,4 @@ Test connection would show you a count of available metrics.  If the count shows
 
   **Mark Build Unstable**  Check if we should mark the build unstable if the Max Record Count is exceeded.  
 
-  **Show Query Results**  Check if we should display the query results in the Jenkins console.
+  **Show Query Results**  Check if we should display the query results in the Jenkins console.  Query results are depicted with UTC time stamps.

@@ -127,6 +127,8 @@ public class QueryOverOps extends hudson.tasks.Recorder implements SimpleBuildSt
 	// Job Plugin execution code
 	@Override
 	public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener)
+	 
+	
 			throws InterruptedException, IOException {
 
 		// EnvVars gets Jenkins Build Vars
@@ -158,8 +160,8 @@ public class QueryOverOps extends hudson.tasks.Recorder implements SimpleBuildSt
 
 		Client OverOpsApiClient = ClientBuilder.newClient();
 
-		ArrayList<String> EventList = new ArrayList<String>();
-		ArrayList<String> NewEventList = new ArrayList<String>();
+		ArrayList<OOReportEvent> EventList = new ArrayList<OOReportEvent>();
+		ArrayList<OOReportEvent> NewEventList = new ArrayList<OOReportEvent>();
 		String usernameAndPassword = OverOpsUser + ":" + OverOpsPWD;
 		String authorizationHeaderValue;
 		String keyName;
@@ -255,10 +257,12 @@ public class QueryOverOps extends hudson.tasks.Recorder implements SimpleBuildSt
 								String eventString = (eventResult.get("summary") + " Introduced by: "
 										+ eventResult.get("introduced_by") + " " + eventOOURL + "/tale.html?event="
 										+ tpkLink);
-								EventList.add(eventString);
+								EventList.add(new OOReportEvent(eventResult.get("summary").toString(),eventResult.get("introduced_by").toString(),eventOOURL + "/tale.html?event="
+										+ tpkLink));
 								totalEvents = totalEvents + value;
 								if (deployName.equals(eventResult.get("introduced_by"))) {
-									NewEventList.add(eventString);
+									NewEventList.add(new OOReportEvent(eventResult.get("summary").toString(),eventResult.get("introduced_by").toString(),eventOOURL + "/tale.html?event="
+											+ tpkLink));
 								}
 
 							}
@@ -297,7 +301,7 @@ public class QueryOverOps extends hudson.tasks.Recorder implements SimpleBuildSt
 				}
 				
 				for (int i = 0; i < NewEventList.size(); i++) {
-					listener.getLogger().println(NewEventList.get(i));
+					listener.getLogger().println(NewEventList.get(i).geteventSummary() + " Intooduced by:  " + NewEventList.get(i).getintroducedBy() + "   " + NewEventList.get(i).getARCLink());
 				}
 				x = RetryCount;
 			}
@@ -305,9 +309,14 @@ public class QueryOverOps extends hudson.tasks.Recorder implements SimpleBuildSt
 			x++;
 
 		}
+		
+		
+		OverOpsBuildAction buildAction = new OverOpsBuildAction(EventList, NewEventList, run );
+        run.addAction(buildAction);
+        
 		listener.getLogger().println();
 		listener.getLogger().println("Total Events found in OverOps for build " + deployNameEnv + ": " + EventList.size());
-		listener.getLogger().println("New Events Introduced by " + deployNameEnv + ": " + NewEventList.size());
+		listener.getLogger().println("New Events Introduced by" + deployNameEnv + ": " + NewEventList.size());
 	}
 
 }
