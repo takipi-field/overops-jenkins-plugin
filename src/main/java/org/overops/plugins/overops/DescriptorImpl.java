@@ -133,9 +133,9 @@ public final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 			if (response.getStatus() == 200) {
 				JSONObject result = response.readEntity(JSONObject.class);
 				JSONArray Views = result.getJSONArray("views");
-				System.out.println("Found " + Views.size() + " Views in OverOps service " + OverOpsSID);
+				System.out.println("Found " + Views.size() + " views in OverOps service " + OverOpsSID);
 				return FormValidation.ok("Connection Successful.  \n Found " + Views.size()
-						+ " Views in OverOps service: " + OverOpsSID);
+						+ " views in OverOps service: " + OverOpsSID);
 			} else {
 				return FormValidation
 						.error("REST API error : " + response.getStatus() + " " + response.getStatusInfo());

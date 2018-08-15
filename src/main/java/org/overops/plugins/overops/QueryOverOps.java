@@ -150,7 +150,7 @@ public class QueryOverOps extends hudson.tasks.Recorder implements SimpleBuildSt
 
 		Calendar now = Calendar.getInstance();
 		now.setTime(new Date());
-		now.add(Calendar.MINUTE, 10); // adds 10 minutes just in case
+		now.add(Calendar.MINUTE, 10); // adds 10 minutes just in case time settings are off a little
 		String toStamp = formatter.format(now.getTime().toInstant());
 
 		Calendar before = Calendar.getInstance();
@@ -176,8 +176,9 @@ public class QueryOverOps extends hudson.tasks.Recorder implements SimpleBuildSt
 			keyName = "X-API-Key";
 			authorizationHeaderValue = OOAPIKey;
 		}
-
-		// Get View ID
+		
+		// Get View ID for All Events
+		
 		try {
 
 			Response getViewResponse = OverOpsApiClient.target(OverOpsURL)
@@ -199,13 +200,10 @@ public class QueryOverOps extends hudson.tasks.Recorder implements SimpleBuildSt
 			e.printStackTrace();
 		}
 
-		if (showResults == true) {
-			listener.getLogger().println("Connecting to " + OverOpsURL + "/api/v1/services/" + OverOpsSID + "/views/"
-					+ ViewID + "/metrics/view/graph");
-		}
+	
 		listener.getLogger().println("Checking OverOps for errors in deployment " + deployNameEnv);
 
-		// Query OverOps
+		// Query OverOps for events matching app and deployment
 		while (x <= RetryCount) {
 			EventList.clear();
 			NewEventList.clear();
@@ -221,9 +219,11 @@ public class QueryOverOps extends hudson.tasks.Recorder implements SimpleBuildSt
 						.queryParam("from", fromStamp).queryParam("to", toStamp).queryParam("points", 12)
 						.queryParam("deployment", deployNameEnv).queryParam("app", OOappName)
 						.request(MediaType.APPLICATION_JSON).header(keyName, authorizationHeaderValue).get();
-
+				if (showResults == true) {
+					listener.getLogger().println("API Call: " + response.toString() + "\n");
+				}
 				if (response.getStatus() == 200) {
-					;
+					
 					JSONObject result = response.readEntity(JSONObject.class);
 					JSONArray Points = result.getJSONArray("graphs").getJSONObject(0).getJSONArray("points");
 
@@ -248,7 +248,9 @@ public class QueryOverOps extends hudson.tasks.Recorder implements SimpleBuildSt
 										.get();
 								JSONObject eventResult = eventResponse.readEntity(JSONObject.class);
 								if (showResults == true) {
+									listener.getLogger().println("API Call: " + eventResponse.toString() + "\n");
 									listener.getLogger().println(eventResult);
+									
 								}
 
 								String tpkString = (OverOpsSID + "#" + eventsID + "#1");
@@ -273,19 +275,20 @@ public class QueryOverOps extends hudson.tasks.Recorder implements SimpleBuildSt
 				e.printStackTrace();
 			}
 			// Validate Query results
+			listener.getLogger().println("\n");
 			listener.getLogger().println(
 					"OverOps found " + EventList.size() + " events in " + OOappName + " deployment " + deployNameEnv);
 			if (EventList.size() > maxEventCount && maxEventCount != -1) {
-				listener.getLogger().println("\n");
+				
 				listener.getLogger().println("Event threshold " + maxEventCount + " Exceeded");
 				if (markUnstable == true) {
 					listener.getLogger().println("OverOps Query results in Unstable build");
 					run.setResult(hudson.model.Result.UNSTABLE);
 				}
 
-				for (int i = 0; i < EventList.size(); i++) {
-					listener.getLogger().println(EventList.get(i));
-				}
+//				for (int i = 0; i < EventList.size(); i++) {
+//					listener.getLogger().println(EventList.get(i).geteventSummary());
+//				}
 				x = RetryCount;
 			}
 			listener.getLogger().println(
@@ -316,7 +319,7 @@ public class QueryOverOps extends hudson.tasks.Recorder implements SimpleBuildSt
         
 		listener.getLogger().println();
 		listener.getLogger().println("Total Events found in OverOps for build " + deployNameEnv + ": " + EventList.size());
-		listener.getLogger().println("New Events Introduced by" + deployNameEnv + ": " + NewEventList.size());
+		listener.getLogger().println("New Events Introduced by " + deployNameEnv + ": " + NewEventList.size());
 	}
 
 }
