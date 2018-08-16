@@ -207,7 +207,6 @@ public class QueryOverOps extends hudson.tasks.Recorder implements SimpleBuildSt
 		while (x <= RetryCount) {
 			EventList.clear();
 			NewEventList.clear();
-			int totalEvents = 0;
 			listener.getLogger().println("\nOverOps Query  #" + x + " from OverOps Jenkins Plugin");
 			listener.getLogger().println("Waiting " + RetryInt + " seconds.");
 			TimeUnit.SECONDS.sleep(RetryInt);
@@ -215,8 +214,8 @@ public class QueryOverOps extends hudson.tasks.Recorder implements SimpleBuildSt
 			try {
 
 				Response response = OverOpsApiClient.target(OverOpsURL)
-						.path("api/v1/services/" + OverOpsSID + "/views/" + ViewID + "/metrics/view/graph")
-						.queryParam("from", fromStamp).queryParam("to", toStamp).queryParam("points", 12)
+						.path("api/v1/services/" + OverOpsSID + "/views/" + ViewID + "/events")
+						.queryParam("from", fromStamp).queryParam("to", toStamp)
 						.queryParam("deployment", deployNameEnv).queryParam("app", OOappName)
 						.request(MediaType.APPLICATION_JSON).header(keyName, authorizationHeaderValue).get();
 				if (showResults == true) {
@@ -225,53 +224,32 @@ public class QueryOverOps extends hudson.tasks.Recorder implements SimpleBuildSt
 				if (response.getStatus() == 200) {
 					
 					JSONObject result = response.readEntity(JSONObject.class);
-					JSONArray Points = result.getJSONArray("graphs").getJSONObject(0).getJSONArray("points");
-
+					JSONArray events = result.getJSONArray("events");
 					if (showResults == true) {
 
-						listener.getLogger().println(Points.size() + " Points");
-						listener.getLogger().println(Points);
+						listener.getLogger().println(events.size() + " Events");
+						listener.getLogger().println(result);
+						
 					}
 
-					for (int i = 0; i < Points.size(); i++) {
-
-						int value = Points.getJSONObject(i).getInt("value");
-						if (value > 0) {
-							JSONArray Contributors = Points.getJSONObject(i).getJSONArray("contributors");
-							for (int j = 0; j < Contributors.size(); j++) {
-
-								String eventsID = Contributors.getJSONObject(j).getString("id");
-
-								Response eventResponse = OverOpsApiClient.target(OverOpsURL)
-										.path("api/v1/services/" + OverOpsSID + "/events/" + eventsID)
-										.request(MediaType.APPLICATION_JSON).header(keyName, authorizationHeaderValue)
-										.get();
-								JSONObject eventResult = eventResponse.readEntity(JSONObject.class);
-								if (showResults == true) {
-									listener.getLogger().println("API Call: " + eventResponse.toString() + "\n");
-									listener.getLogger().println(eventResult);
-									
-								}
-
+					for (int i = 0; i < events.size(); i++) {
+												
+								String eventsID = events.getJSONObject(i).getString("id");
 								String tpkString = (OverOpsSID + "#" + eventsID + "#1");
 								String tpkLink = java.util.Base64.getEncoder().encodeToString(tpkString.getBytes("utf-8"));
 								String eventOOURL = OverOpsURL.replaceAll("api.overops.com", "app.overops.com");
-								String eventString = (eventResult.get("summary") + " Introduced by: "
-										+ eventResult.get("introduced_by") + " " + eventOOURL + "/tale.html?event="
-										+ tpkLink);
-								EventList.add(new OOReportEvent(eventResult.get("summary").toString(),eventResult.get("introduced_by").toString(),eventOOURL + "/tale.html?event="
+								EventList.add(new OOReportEvent(events.getJSONObject(i).get("summary").toString(),events.getJSONObject(i).get("introduced_by").toString(),eventOOURL + "/tale.html?event="
 										+ tpkLink));
-								totalEvents = totalEvents + value;
-								if (deployName.equals(eventResult.get("introduced_by"))) {
-									NewEventList.add(new OOReportEvent(eventResult.get("summary").toString(),eventResult.get("introduced_by").toString(),eventOOURL + "/tale.html?event="
+								if (deployName.equals(events.getJSONObject(i).get("introduced_by"))) {
+									NewEventList.add(new OOReportEvent(events.getJSONObject(i).get("summary").toString(),events.getJSONObject(i).get("introduced_by").toString(),eventOOURL + "/tale.html?event="
 											+ tpkLink));
 								}
 
 							}
 						}
-					}
+					
 				}
-			} catch (Exception e) {
+			 catch (Exception e) {
 				e.printStackTrace();
 			}
 			// Validate Query results
@@ -291,14 +269,16 @@ public class QueryOverOps extends hudson.tasks.Recorder implements SimpleBuildSt
 //				}
 				x = RetryCount;
 			}
+			listener.getLogger().println("\n");
 			listener.getLogger().println(
 					"OverOps found " + NewEventList.size() + " new events in " + OOappName + " deployment " + deployNameEnv);
 			if (NewEventList.size() > maxNewEventCount && maxNewEventCount != -1) {
-				listener.getLogger().println("\n");
+				
 				listener.getLogger().println("New Event threshold " + maxNewEventCount + " Exceeded");
 				if (markUnstable == true) {
 					
 					listener.getLogger().println("OverOps Query results in Unstable build");
+					listener.getLogger().println("\n");
 					run.setResult(hudson.model.Result.UNSTABLE);
 					
 				}
