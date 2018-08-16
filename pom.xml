@@ -8,7 +8,7 @@
 		<version>3.2</version>
 	</parent>
 	<artifactId>overops-query</artifactId>
-	<version>0.23-SNAPSHOT</version>
+	<version>0.23</version>
 	<packaging>hpi</packaging>
 	<properties>
 		<!-- Baseline Jenkins version you use to build the plugin. Users must have 
@@ -134,7 +134,7 @@
 		<connection>scm:git:ssh://github.com/jenkinsci/overops-query-plugin.git</connection>
 		<developerConnection>scm:git:ssh://git@github.com/jenkinsci/overops-query-plugin.git</developerConnection>
 		<url>https://github.com/jenkinsci/overops-query-plugin</url>
-    <tag>HEAD</tag>
+    <tag>overops-query-0.23</tag>
   </scm>
 	<repositories>
 		<repository>
