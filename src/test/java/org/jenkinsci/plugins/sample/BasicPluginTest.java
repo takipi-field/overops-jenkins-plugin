@@ -1,12 +1,14 @@
 package org.jenkinsci.plugins.sample;
 
 import hudson.Functions;
-import hudson.model.*;
-import hudson.tasks.*;
-
+import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
+import hudson.tasks.BatchFile;
+import hudson.tasks.Builder;
+import hudson.tasks.Shell;
 import org.junit.Rule;
 import org.junit.Test;
-import org.jvnet.hudson.test.*;
+import org.jvnet.hudson.test.JenkinsRule;
 
 public class BasicPluginTest {
 
@@ -14,14 +16,14 @@ public class BasicPluginTest {
     public JenkinsRule j = new JenkinsRule();
 
 
-
-    @Test public void freestyleEcho() throws Exception {
+    @Test
+    public void freestyleEcho() throws Exception {
         final String command = "echo hello";
 
         // Create a new freestyle project with a unique name, with an "Execute shell" build step;
         // if running on Windows, this will be an "Execute Windows batch command" build step
         FreeStyleProject project = j.createFreeStyleProject();
-        Builder step = Functions.isWindows() ? new BatchFile(command) : new Shell(command); 
+        Builder step = Functions.isWindows() ? new BatchFile(command) : new Shell(command);
         project.getBuildersList().add(step);
 
         // Enqueue a build of the project, wait for it to complete, and assert success
@@ -29,6 +31,6 @@ public class BasicPluginTest {
 
         // Assert that the console log contains the output we expect
         j.assertLogContains(command, build);
-      }
+    }
 
 }
