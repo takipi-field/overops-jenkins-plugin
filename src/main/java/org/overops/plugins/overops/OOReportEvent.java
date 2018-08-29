@@ -8,25 +8,23 @@ public class OOReportEvent {
 
     public OOReportEvent(String eventSummary, String introducedBy, String ARCLink) {
 
-        {
+
             this.eventSummary = eventSummary;
             this.introducedBy = introducedBy;
             this.ARCLink = ARCLink;
 
-        }
 
     }
 
-
-    public String geteventSummary() {
-        return this.eventSummary;
+    public String getEventSummary() {
+        return eventSummary;
     }
 
-    public String getintroducedBy() {
-        return this.introducedBy;
+    public String getIntroducedBy() {
+        return introducedBy;
     }
 
     public String getARCLink() {
-        return this.ARCLink;
+        return ARCLink;
     }
 }
