@@ -4,14 +4,15 @@ import hudson.model.Action;
 import hudson.model.Run;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class OverOpsBuildAction implements Action {
 
 
     private Run<?, ?> build;
-    private ArrayList<OOReportEvent> EventList;
-    private ArrayList<OOReportEvent> NewEventList;
+    private List<OOReportEvent> events;
+    private List<OOReportEvent> newEvents;
 
     @Override
     public String getIconFileName() {
@@ -28,12 +29,12 @@ public class OverOpsBuildAction implements Action {
         return "OverOpsReport";
     }
 
-    public ArrayList<OOReportEvent> getEventList() {
-        return EventList;
+    public List<OOReportEvent> getEvents() {
+        return events;
     }
 
-    public ArrayList<OOReportEvent> getNewEventList() {
-        return NewEventList;
+    public List<OOReportEvent> getNewEvents() {
+        return newEvents;
     }
 
     public int getBuildNumber() {
@@ -44,9 +45,9 @@ public class OverOpsBuildAction implements Action {
         return build;
     }
 
-    OverOpsBuildAction(final ArrayList<OOReportEvent> eventList2, final ArrayList<OOReportEvent> newEventList2, final Run<?, ?> build) {
-        this.EventList = eventList2;
-        this.NewEventList = newEventList2;
+    OverOpsBuildAction(final List<OOReportEvent> events, final List<OOReportEvent> newEvents, final Run<?, ?> build) {
+        this.events = events;
+        this.newEvents = newEvents;
         this.build = build;
     }
 }
