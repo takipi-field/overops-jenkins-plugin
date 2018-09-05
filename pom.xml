@@ -128,6 +128,11 @@
 			<name>Joe Offenberg</name>
 			<email>joe.offenberg@overops.com</email>
 		</developer>
+		<developer>
+			<id>timveil</id>
+			<name>Tim Veil</name>
+			<email>tim.veil@overops.com</email>
+		</developer>
 	</developers>
 
 	<scm>
