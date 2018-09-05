@@ -92,19 +92,6 @@ public final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
             return FormValidation.error("OverOps URL is empty");
         }
 
-        if (overOpsUser == null || overOpsUser.isEmpty()) {
-            return FormValidation.error("OverOps User is empty");
-        }
-
-        if (overOpsPWD == null || overOpsPWD.getPlainText().isEmpty()) {
-            return FormValidation.error("OverOps Password is empty");
-        }
-
-        if (overOpsAPIKey == null || overOpsAPIKey.getPlainText().isEmpty()) {
-            return FormValidation.error("OverOps API Key is empty");
-        }
-
-
         //Admin permission check
         Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
 
