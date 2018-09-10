@@ -1,19 +1,21 @@
 package org.overops.plugins.overops;
 
+import java.util.List;
+
+import org.overops.plugins.overops.RegressionReportBuilder.RegressionReport;
+
 import hudson.model.Action;
 import hudson.model.Run;
 
-import java.util.ArrayList;
-import java.util.List;
-
-
 public class OverOpsBuildAction implements Action {
-
-
-    private Run<?, ?> build;
-    private List<OOReportEvent> events;
-    private List<OOReportEvent> newEvents;
-
+    private final Run<?, ?> build;
+    private final RegressionReport regressionReport;
+    
+    OverOpsBuildAction(RegressionReport regressionReport, Run<?, ?> build) {
+        this.regressionReport = regressionReport;
+        this.build = build;
+    }
+    
     @Override
     public String getIconFileName() {
         return "/plugin/overops-query/images/OverOps.png";
@@ -29,12 +31,16 @@ public class OverOpsBuildAction implements Action {
         return "OverOpsReport";
     }
 
-    public List<OOReportEvent> getEvents() {
-        return events;
+    public List<OOReportRegressedEvent> getRegressedEvents() {
+        return regressionReport.getRegressions();
     }
 
     public List<OOReportEvent> getNewEvents() {
-        return newEvents;
+        return regressionReport.getNewIssues();
+    }
+    
+    public List<OOReportEvent> getAllIssues() {
+        return regressionReport.getAllIssues();
     }
 
     public int getBuildNumber() {
@@ -43,11 +49,5 @@ public class OverOpsBuildAction implements Action {
 
     public Run<?, ?> getBuild() {
         return build;
-    }
-
-    OverOpsBuildAction(final List<OOReportEvent> events, final List<OOReportEvent> newEvents, final Run<?, ?> build) {
-        this.events = events;
-        this.newEvents = newEvents;
-        this.build = build;
     }
 }

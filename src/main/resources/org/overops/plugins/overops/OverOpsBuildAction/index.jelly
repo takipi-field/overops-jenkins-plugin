@@ -2,16 +2,25 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
     <l:layout>
         <st:include it="${it.build}" page="sidepanel.jelly"/>
+        <style>
+			table, th, td {
+			    border: 1px solid black;
+			    border-collapse: collapse;
+			}
+			th, td {
+			    padding: 5px;
+			    text-align: left;
+			}
+		</style>
         <l:main-panel>
-            <h1><img  src ="${resURL}/plugin/overops-query/images/OverOpsFullLogo.png" height="32"/> Reliability Report</h1>
-            <h2>${it.events.size()} total events in build #${it.buildNumber}</h2>
-            <h2>${it.newEvents.size()} events introduced by this build</h2>
-            <table>
-            <tr style="font-weight:bold"><td>Event</td> <td>Introduced by</td><td>Link</td></tr>
-             <j:forEach items="${it.newEvents}" var="i">
-                <tr><td>${i.eventSummary}    </td> <td align="right">${i.introducedBy}   </td><td><a href="${i.ARCLink}">   ${i.ARCLink} </a></td> </tr>
+            <h1><img src ="${resURL}/plugin/overops-query/images/OverOpsFullLogo.png" height="32"/> Reliability Report</h1>
+            <h2>${it.newEvents.size()} new events, ${it.regressedEvents.size()} regressions in build #${it.buildNumber}</h2>
+            <table style="width:100%">
+            <tr style="font-weight:bold"><td>Event</td> <td>Introduced by</td><td>Volume / Rate</td><td>Type</td> </tr>
+             <j:forEach items="${it.allIssues}" var="i">
+                <tr><td><a href="${i.ARCLink}" target="_blank"> ${i.eventSummary}</a></td><td>${i.introducedBy}</td><td>${i.eventRate}</td><td>${i.type}</td></tr>
              </j:forEach>
-            </table>   
+            </table>
         </l:main-panel>
     </l:layout>
 </j:jelly>

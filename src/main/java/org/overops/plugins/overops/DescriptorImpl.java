@@ -1,5 +1,13 @@
 package org.overops.plugins.overops;
 
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.verb.POST;
+
+import com.takipi.common.api.ApiClient;
+import com.takipi.common.api.url.UrlClient.Response;
+
 import hudson.Extension;
 import hudson.model.AbstractProject;
 import hudson.tasks.BuildStepDescriptor;
@@ -7,134 +15,93 @@ import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-import org.jenkinsci.Symbol;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.verb.POST;
-
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import java.nio.charset.StandardCharsets;
-
-import static java.util.Base64.getEncoder;
 
 //DescriptorImpl governs the global config settings
 
 @Extension
 @Symbol("OverOpsQuery")
 public final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
+	private String overOpsURL;
+	private String overOpsSID;
+	private Secret overOpsAPIKey;
 
-    private String overOpsURL;
-    private String overOpsUser;
-    private Secret overOpsPWD;
-    private String overOpsSID;
-    private Secret overOpsAPIKey;
+	public DescriptorImpl() {
+		super(QueryOverOps.class);
+		load();
+	}
 
-    public DescriptorImpl() {
-        super(QueryOverOps.class);
-        load();
-    }
+	@Override
+	public boolean isApplicable(Class<? extends AbstractProject> aClass) {
+		return true;
+	}
 
-    @Override
-    public boolean isApplicable(Class<? extends AbstractProject> aClass) {
-        return true;
-    }
+	@Override
+	public String getDisplayName() {
+		return "Query OverOps";
+	}
 
-    @Override
-    public String getDisplayName() {
-        return "Query OverOps";
-    }
+	// Allows for persisting global config settings in JSONObject
+	@Override
+	public boolean configure(StaplerRequest req, JSONObject formData) {
+		formData = formData.getJSONObject("QueryOverOps");
+		overOpsURL = formData.getString("overOpsURL");
+		overOpsSID = formData.getString("overOpsSID");
+		overOpsAPIKey = Secret.fromString(formData.getString("overOpsAPIKey"));
+		save();
+		return false;
+	}
 
-    // Allows for persisting global config settings in JSONObject
-    @Override
-    public boolean configure(StaplerRequest req, JSONObject formData) {
-        formData = formData.getJSONObject("QueryOverOps");
-        overOpsURL = formData.getString("overOpsURL");
-        overOpsUser = formData.getString("overOpsUser");
-        overOpsPWD = Secret.fromString(formData.getString("overOpsPWD"));
-        overOpsSID = formData.getString("overOpsSID");
-        overOpsAPIKey = Secret.fromString(formData.getString("overOpsAPIKey"));
-        save();
-        return false;
-    }
+	public String getOverOpsURL() {
+		return overOpsURL;
+	}
 
-    public String getOverOpsURL() {
-        return overOpsURL;
-    }
+	public String getOverOpsSID() {
+		return overOpsSID;
+	}
 
-    public String getOverOpsUser() {
-        return overOpsUser;
-    }
+	public Secret getOverOpsAPIKey() {
+		return overOpsAPIKey;
+	}
 
-    public Secret getOverOpsPWD() {
-        return overOpsPWD;
-    }
+	@POST
+	public FormValidation doTestConnection(@QueryParameter("overOpsURL") final String overOpsURL,
+			@QueryParameter("overOpsSID") final String overOpsSID,
+			@QueryParameter("overOpsAPIKey") final Secret overOpsAPIKey) {
 
-    public String getOverOpsSID() {
-        return overOpsSID;
-    }
+		if (overOpsURL == null || overOpsURL.isEmpty()) {
+			return FormValidation.error("OverOps URL is empty");
+		}
 
-    public Secret getOverOpsAPIKey() {
-        return overOpsAPIKey;
-    }
+		// Admin permission check
+		Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
 
-    @POST
-    public FormValidation doTestConnection(@QueryParameter("overOpsURL") final String overOpsURL,
-                                           @QueryParameter("overOpsUser") final String overOpsUser,
-                                           @QueryParameter("overOpsPWD") final Secret overOpsPWD,
-                                           @QueryParameter("overOpsAPIKey") final Secret overOpsAPIKey) {
+		try {
+			String apiKey = Secret.toString(overOpsAPIKey);
 
-        if (overOpsURL == null || overOpsURL.isEmpty()) {
-            return FormValidation.error("OverOps URL is empty");
-        }
+			ApiClient apiClient = ApiClient.newBuilder().setHostname(overOpsURL).setApiKey(apiKey).build();
+			Response<String> response = apiClient.testConnection();
+			    
+			boolean success = (response != null) && (!response.isBadResponse());
+			
+			if (success) {
 
-        //Admin permission check
-        Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
+				return FormValidation.ok("Connection Successful.");
+			} else {
+				
+				int code;
+				
+				if (response != null) {
+					code = response.responseCode;
+				} else {
+					code = -1;
+				}
 
-        try {
-            Client apiClient = ClientBuilder.newClient();
+				return FormValidation.error("Unable to connect to API server. Code: " + code);
+			}
 
-            String usernameAndPassword = overOpsUser + ':' + Secret.toString(overOpsPWD);
-            String authorizationHeaderValue;
-            String keyName;
-
-            if (Secret.toString(overOpsAPIKey) == null || Secret.toString(overOpsAPIKey).isEmpty()) {
-                keyName = "Authorization";
-                authorizationHeaderValue = "Basic " + getEncoder().encodeToString(usernameAndPassword.getBytes(StandardCharsets.UTF_8));
-            } else {
-                keyName = "X-API-Key";
-                authorizationHeaderValue = Secret.toString(overOpsAPIKey);
-
-            }
-
-            Response response = apiClient
-                    .target(overOpsURL)
-                    .path("api/v1/services/" + overOpsSID + "/views")
-                    .request(MediaType.APPLICATION_JSON)
-                    .header(keyName, authorizationHeaderValue).get();
-
-            if (response.getStatus() == 200) {
-                JSONObject result = response.readEntity(JSONObject.class);
-                JSONArray Views = result.getJSONArray("views");
-                System.out.println("Found " + Views.size() + " views in OverOps service " + overOpsSID);
-
-                return FormValidation.ok("Connection Successful.  \n Found " + Views.size() + " views in OverOps service: " + overOpsSID);
-            } else {
-                return FormValidation.error("REST API error : " + response.getStatus() + ' ' + response.getStatusInfo());
-            }
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-
-            return FormValidation.error(e, "REST API error : " + e.getMessage());
-
-        }
-
-    }
-
+		} catch (Exception e) {
+			return FormValidation.error(e, "REST API error : " + e.getMessage());
+		}
+	}
 }

@@ -15,7 +15,6 @@ public class BasicPluginTest {
     @Rule
     public JenkinsRule j = new JenkinsRule();
 
-
     @Test
     public void freestyleEcho() throws Exception {
         final String command = "echo hello";

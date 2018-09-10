@@ -1,30 +1,74 @@
 package org.overops.plugins.overops;
 
+import java.text.DecimalFormat;
+import java.util.regex.Pattern;
+
+import com.takipi.common.api.result.event.EventResult;
+
 public class OOReportEvent {
+	
+	protected static final DecimalFormat decimalFormat = new DecimalFormat("#.00"); 
+	
+	public static final String NEW_ISSUE = "New";
+	public static final String SEVERE_NEW = "Severe New";
+	public static final String REGRESSION = "Regression";
+	public static final String SEVERE_REGRESSION = "Severe Regression";
+	
+	protected final EventResult event;
+	protected final String arcLink;
+	protected final String type;
 
-    private String eventSummary;
-    private String introducedBy;
-    private String ARCLink;
+	public OOReportEvent(EventResult event, String type, String arcLink) {
+		this.event = event;
+		this.arcLink = arcLink;
+		this.type = type;
+	}
 
-    public OOReportEvent(String eventSummary, String introducedBy, String ARCLink) {
+	public String getEventSummary() {
+		
+		String[] parts = event.error_location.class_name.split(Pattern.quote("."));
+		
+		String simpleClassName;
+		
+		if (parts.length > 0) {
+			simpleClassName = parts[parts.length - 1];
+		} else {
+			simpleClassName = event.error_location.class_name;
+		}
+		
+;		return event.type + " in " + simpleClassName + "." + event.error_location.method_name;
+	}
 
+	public String getEventRate() {
+		StringBuilder result = new StringBuilder();
+		
+		double rate = (double)event.stats.hits / (double)event.stats.invocations * 100; 	
+		
+		result.append(event.stats.hits);
+		result.append(" (");
+		result.append(decimalFormat.format(rate));
+		result.append("%)");
+		
+		return result.toString();
+	}
 
-            this.eventSummary = eventSummary;
-            this.introducedBy = introducedBy;
-            this.ARCLink = ARCLink;
+	public String getIntroducedBy() {
+		return event.introduced_by;
+	}
 
+	public String getType() {
+		return type;
+	}
 
-    }
+	public String getARCLink() {
+		return arcLink;
+	}
 
-    public String getEventSummary() {
-        return eventSummary;
-    }
+	public long getHits() {
+		return event.stats.hits;
+	}
 
-    public String getIntroducedBy() {
-        return introducedBy;
-    }
-
-    public String getARCLink() {
-        return ARCLink;
-    }
+	public long getCalls() {
+		return event.stats.invocations;
+	}
 }
