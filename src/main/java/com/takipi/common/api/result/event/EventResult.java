@@ -3,7 +3,7 @@ package com.takipi.common.api.result.event;
 import java.util.List;
 
 import com.takipi.common.api.data.event.Location;
-import com.takipi.common.api.data.volume.Stats;
+import com.takipi.common.api.data.event.Stats;
 import com.takipi.common.api.result.intf.ApiResult;
 
 public class EventResult implements ApiResult {
@@ -23,52 +23,45 @@ public class EventResult implements ApiResult {
 	public List<String> similar_event_ids;
 
 	public Stats stats;
-	
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		
+
 		if (summary != null) {
 			sb.append(summary);
 		}
-		
+
 		if (id != null) {
 			sb.append("(");
 			sb.append(id);
 			sb.append(")");
 		}
-		
+
 		if (sb.length() != 0) {
 			return sb.toString();
 		}
-		
+
 		return super.toString();
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
-		
 		if (this == obj) {
 			return true;
 		}
-					
-		if (obj instanceof EventResult) {
-			EventResult other = (EventResult)obj;
-			
-			if ((this.id != null) && (other.id != null) && (id.equals(other.id))) {
-				return true;
-			}
+
+		if ((obj == null) || (!(obj instanceof EventResult))) {
+			return false;
 		}
 
-		return false;
+		EventResult other = (EventResult) obj;
+		
+		return ((this.id != null) && (other.id != null) && (id.equals(other.id)));
 	}
-	
+
 	@Override
 	public int hashCode() {
-		if (id != null) {
-			return id.hashCode();
-		}
-		
-		return super.hashCode();
+		return (id != null ? id.hashCode() : super.hashCode());
 	}
 }

@@ -9,10 +9,10 @@ import java.util.List;
 
 import com.takipi.common.api.ApiClient;
 import com.takipi.common.api.result.event.EventResult;
-import com.takipi.common.api.util.ApiClientUtils;
 import com.takipi.common.udf.regression.RegressionUtils;
 import com.takipi.common.udf.regression.RegressionUtils.RateRegression;
 import com.takipi.common.udf.regression.RegressionUtils.RegressionPair;
+import com.takipi.common.udf.util.ApiEventUtil;
 
 public class RegressionReportBuilder {
 
@@ -53,7 +53,7 @@ public class RegressionReportBuilder {
 	
 	public static String getArcLink(ApiClient apiClient, String serviceId, String eventId, int timespan) {
 
-		String result = ApiClientUtils.getEventRecentLink(apiClient, serviceId, eventId, timespan);
+		String result = ApiEventUtil.getEventRecentLink(apiClient, serviceId, eventId, timespan);
 
 		return result;
 	}     

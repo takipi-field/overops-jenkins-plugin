@@ -1,13 +1,13 @@
-package com.takipi.common.api.request.event.actions;
+package com.takipi.common.api.request.event;
 
 import java.io.UnsupportedEncodingException;
 
 import com.takipi.common.api.request.ServiceRequest;
 import com.takipi.common.api.request.intf.ApiGetRequest;
-import com.takipi.common.api.result.event.actions.EventsActionsResult;
+import com.takipi.common.api.result.event.EventActionsResult;
 import com.takipi.common.api.util.ValidationUtil;
 
-public class EventActionsRequest extends ServiceRequest implements ApiGetRequest<EventsActionsResult> {
+public class EventActionsRequest extends ServiceRequest implements ApiGetRequest<EventActionsResult> {
 
 	private final String eventId;
 
@@ -20,21 +20,21 @@ public class EventActionsRequest extends ServiceRequest implements ApiGetRequest
 	public String urlPath() {
 		return baseUrlPath() + "/events/" + eventId + "/actions";
 	}
-	
+
 	@Override
-	public Class<EventsActionsResult> resultClass() {
-		return EventsActionsResult.class;
+	public Class<EventActionsResult> resultClass() {
+		return EventActionsResult.class;
 	}
-	
+
 	@Override
 	public String[] getParams() throws UnsupportedEncodingException {
 		return null;
 	}
-	
+
 	public static Builder newBuilder() {
 		return new Builder();
 	}
-	
+
 	public static class Builder extends ServiceRequest.Builder {
 		private String eventId;
 

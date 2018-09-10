@@ -98,7 +98,7 @@ public class ApiClient extends UrlClient {
 			return Response.of(HttpURLConnection.HTTP_INTERNAL_ERROR, null);
 		}
 	}
-
+	
 	private <T extends ApiResult> Response<T> getApiResponse(Response<String> response, Class<T> clazz) {
 		if ((response.isBadResponse()) || (Strings.isNullOrEmpty(response.data))) {
 			return Response.of(response.responseCode, null);

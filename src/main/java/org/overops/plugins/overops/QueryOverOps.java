@@ -33,7 +33,7 @@ import org.overops.plugins.overops.RegressionReportBuilder.RegressionReport;
 
 import com.takipi.common.api.ApiClient;
 import com.takipi.common.api.data.view.SummarizedView;
-import com.takipi.common.api.util.ApiClientUtils;
+import com.takipi.common.udf.util.ApiViewUtil;
 
 import hudson.FilePath;
 import hudson.Launcher;
@@ -131,7 +131,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		
 		ApiClient apiClient = ApiClient.newBuilder().setHostname(apiHost).setApiKey(apiKey).build();
 		
-		SummarizedView allEventsView = ApiClientUtils.getServiceViewByName(apiClient, serviceId, "All Events");
+		SummarizedView allEventsView = ApiViewUtil.getServiceViewByName(apiClient, serviceId, "All Events");
 
 		if (allEventsView == null) {
 			throw new IllegalStateException("Could not acquire ID for All events view");

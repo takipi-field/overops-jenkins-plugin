@@ -4,40 +4,29 @@ public class Label {
 	public String name;
 	public String type;
 	public String color;
-	
+
 	@Override
 	public String toString() {
-		if (name != null) {
-			return name;
-		}
-		
-		return super.toString();
+		return (name != null ? name : super.toString());
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
-		
 		if (this == obj) {
 			return true;
 		}
-					
-		if (obj instanceof Label) {
-			Label other = (Label)obj;
-			
-			if ((this.name != null) && (other.name != null) && (name.equals(other.name))) {
-				return true;
-			}
+
+		if ((obj == null) || (!(obj instanceof Label))) {
+			return false;
 		}
 
-		return false;
+		Label other = (Label) obj;
+
+		return ((this.name != null) && (other.name != null) && (name.equals(other.name)));
 	}
-	
+
 	@Override
 	public int hashCode() {
-		if (name != null) {
-			return name.hashCode();
-		}
-		
-		return super.hashCode();
+		return (name != null ? name.hashCode() : super.hashCode());
 	}
 }

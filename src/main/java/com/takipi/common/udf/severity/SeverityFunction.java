@@ -12,20 +12,21 @@ import org.joda.time.format.ISODateTimeFormat;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.takipi.common.api.ApiClient;
+import com.takipi.common.api.data.event.Action;
+import com.takipi.common.api.request.event.EventActionsRequest;
 import com.takipi.common.api.request.event.EventModifyLabelsRequest;
-import com.takipi.common.api.request.event.actions.EventActionsRequest;
 import com.takipi.common.api.result.EmptyResult;
+import com.takipi.common.api.result.event.EventActionsResult;
 import com.takipi.common.api.result.event.EventResult;
-import com.takipi.common.api.result.event.actions.EventActionsResult;
-import com.takipi.common.api.result.event.actions.EventsActionsResult;
 import com.takipi.common.api.url.UrlClient.Response;
-import com.takipi.common.api.util.ApiClientUtils;
 import com.takipi.common.api.util.Pair;
 import com.takipi.common.udf.ContextArgs;
 import com.takipi.common.udf.input.Input;
 import com.takipi.common.udf.label.ApplyLabelFunction;
 import com.takipi.common.udf.regression.RegressionUtils;
 import com.takipi.common.udf.regression.RegressionUtils.RateRegression;
+import com.takipi.common.udf.util.ApiLabelUtil;
+import com.takipi.common.udf.util.ApiViewUtil;
 
 public class SeverityFunction {
 	public static String validateInput(String rawInput) {
@@ -33,7 +34,7 @@ public class SeverityFunction {
 	}
 
 	private static void setupSeverityViews(ContextArgs args, SeverityInput input) {
-		ApiClientUtils.createLabelsIfNotExists(args.apiClient(), args.serviceId,
+		ApiLabelUtil.createLabelsIfNotExists(args.apiClient(), args.serviceId,
 				new String[] { input.newEventslabel, input.regressedEventsLabel });
 
 		Collection<Pair<String, String>> views = new ArrayList<Pair<String, String>>();
@@ -41,7 +42,7 @@ public class SeverityFunction {
 		views.add(Pair.of(input.newEventsView, input.newEventslabel));
 		views.add(Pair.of(input.regressedEventsView, input.regressedEventsLabel));
 
-		ApiClientUtils.createLabelViewsIfNotExists(args.apiClient(), args.serviceId, views);
+		ApiViewUtil.createLabelViewsIfNotExists(args.apiClient(), args.serviceId, views);
 	}
 
 	public static void execute(String rawContextArgs, String rawInput) {
@@ -129,28 +130,27 @@ public class SeverityFunction {
 			EventActionsRequest eventActionsRequest = EventActionsRequest.newBuilder().setServiceId(args.serviceId)
 					.setEventId(event.id).build();
 
-			Response<EventsActionsResult> eventsActionsResponse = apiClient.get(eventActionsRequest);
+			Response<EventActionsResult> eventsActionsResponse = apiClient.get(eventActionsRequest);
 
 			if (eventsActionsResponse.isBadResponse()) {
 				System.err.println("Can't create events actions for event " + event.id);
 			}
 
-			if (eventsActionsResponse.data.events == null) {
+			if (eventsActionsResponse.data.event_actions == null) {
 				continue;
 			}
 
-			for (EventActionsResult eventAction : eventsActionsResponse.data.events) {
-
+			for (Action action : eventsActionsResponse.data.event_actions) {
 				// we should add a constant for this in the Java API wrapper
-				if (!"Add Label".equals(eventAction.action)) {
+				if (!"Add Label".equals(action.action)) {
 					continue;
 				}
 
-				if (!label.equals(eventAction.data)) {
+				if (!label.equals(action.data)) {
 					continue;
 				}
 
-				DateTime labelAddTime = ISODateTimeFormat.dateTimeParser().parseDateTime(eventAction.timestamp);
+				DateTime labelAddTime = ISODateTimeFormat.dateTimeParser().parseDateTime(action.timestamp);
 				DateTime retentionWindow = DateTime.now().minusMinutes(labelRetention);
 
 				// lets see if the label was added before the retention window, is so - remove
