@@ -113,10 +113,6 @@ public class ApiViewUtil {
 			throw new IllegalStateException("Missing events volume result.");
 		}
 
-		if (eventsVolumeResult.events == null) {
-			throw new IllegalStateException("Missing events volume event data.");
-		}
-
 		return eventsVolumeResult;
 	}
 }
