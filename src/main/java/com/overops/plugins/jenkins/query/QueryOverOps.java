@@ -47,6 +47,8 @@ import jenkins.tasks.SimpleBuildStep;
 
 public class QueryOverOps extends Recorder implements SimpleBuildStep {
 	
+	
+	
 	private final int activeTimespan;
 	private final int baselineTimespan;
 
@@ -64,6 +66,8 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 	private final String serviceId;
 	
 	private final boolean markUnstable;
+	private String applicationName;
+	private String deploymentName;
 
 	
 	@DataBoundConstructor
@@ -75,7 +79,10 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 			boolean markUnstable, boolean showResults, String serviceId,
 			int serverWait) {
 			
+		 
 		
+		this.applicationName = applicationName;
+		this.deploymentName = deploymentName;
 		this.criticalExceptionTypes = criticalExceptionTypes;
 
 		this.activeTimespan = activeTimespan;
@@ -93,6 +100,57 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		this.showResults = showResults;
 		this.markUnstable = markUnstable;
 	}
+	
+	//getters() needed for config.jelly
+	
+	   public String getapplicationName() {
+	        return applicationName;
+	    }
+	   
+	   public String getdeploymentName() {
+	        return deploymentName;
+	    }
+	   
+	   public int getactiveTimespan() {
+	        return activeTimespan;
+	    }
+	   
+	   public int getbaselineTimespan() {
+	        return baselineTimespan;
+	    }
+	   
+	   
+	   public double getminErrorRateThreshold() {
+	        return minErrorRateThreshold;
+	    }
+	   
+	   public double getminVolumeThreshold() {
+	        return minVolumeThreshold;
+	    }
+	   
+	   public double getreggressionDelta() {
+	        return reggressionDelta;
+	    }
+	   
+	   public double getcriticalRegressionDelta() {
+	        return criticalRegressionDelta;
+	    }
+	   
+	   public String getserviceId() {
+	        return serviceId;
+	    }
+	   
+	   public int getserverWait() {
+	        return serverWait;
+	    }
+	   
+	   public boolean getshowResults() {
+	        return showResults;
+	    }
+	   
+	   public boolean getmarkUnstable() {
+	        return markUnstable;
+	    }
 
 	public BuildStepMonitor getRequiredMonitorService() {
 		return BuildStepMonitor.NONE;
