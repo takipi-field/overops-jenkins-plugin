@@ -42,6 +42,10 @@ public class OOReportEvent {
 	public String getEventRate() {
 		StringBuilder result = new StringBuilder();
 		
+		if ((event.stats.invocations == 0) || (event.stats.hits == 0 )) {
+			return "1";
+		}
+		
 		double rate = (double)event.stats.hits / (double)event.stats.invocations * 100; 	
 		
 		result.append(event.stats.hits);

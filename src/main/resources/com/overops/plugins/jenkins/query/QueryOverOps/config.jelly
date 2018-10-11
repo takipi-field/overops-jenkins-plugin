@@ -27,6 +27,9 @@
     <f:entry title="Critical Regression Threshold (0-1)" field="criticalRegressionDelta">
         <f:textbox default="0.25"/>
     </f:entry>
+     <f:entry title="Apply Seasonality" field="applySeasonality">
+        <f:checkbox default="true"/>
+    </f:entry>
     <f:entry title="Environment ID" field="serviceId">
         <f:textbox default=""/>
     </f:entry>

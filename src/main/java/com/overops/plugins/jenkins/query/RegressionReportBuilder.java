@@ -10,7 +10,7 @@ import java.util.List;
 import com.overops.common.api.util.ApiEventUtil;
 import com.overops.common.util.RegressionUtil;
 import com.overops.common.util.RegressionUtil.RateRegression;
-import com.overops.common.util.RegressionUtil.RegressionPair;
+import com.overops.common.util.RegressionUtil.RegressionResult;
 import com.takipi.common.api.ApiClient;
 import com.takipi.common.api.result.event.EventResult;
 
@@ -60,7 +60,7 @@ public class RegressionReportBuilder {
 
 	public static RegressionReport execute(ApiClient apiClient, String serviceId, String viewId, int activeTimespan,
 			int baselineTimespan, String criticalExceptionTypes, int minVolumeThreshold, double minErrorRateThreshold,
-			double reggressionDelta, double criticalReggressionDelta, PrintStream output) {
+			double reggressionDelta, double criticalReggressionDelta, boolean applySeasonality, PrintStream output) {
 
 		Collection<String> criticalExceptionTypeList;
 
@@ -72,7 +72,7 @@ public class RegressionReportBuilder {
 
 		RateRegression rateRegression = RegressionUtil.calculateRateRegressions(apiClient, serviceId,
 				viewId, activeTimespan, baselineTimespan, minVolumeThreshold, minErrorRateThreshold,
-				reggressionDelta, criticalReggressionDelta, criticalExceptionTypeList, output);
+				reggressionDelta, criticalReggressionDelta, applySeasonality, criticalExceptionTypeList, output);
 		
 		List<OOReportEvent> newIssues = getAllNewEvents(apiClient, serviceId, baselineTimespan, rateRegression);
 		List<OOReportRegressedEvent> regressions = getAllRegressions(apiClient, serviceId, baselineTimespan, rateRegression);
@@ -147,26 +147,26 @@ public class RegressionReportBuilder {
 
 		List<OOReportRegressedEvent> result = new ArrayList<OOReportRegressedEvent>();
 
-		for (RegressionPair pair : rateRegression.getCriticalRegressions().values()) {
+		for (RegressionResult regressionResult : rateRegression.getCriticalRegressions().values()) {
 
-			String arcLink = getArcLink(apiClient, serviceId, pair.getActiveEvent().id, timespan);
+			String arcLink = getArcLink(apiClient, serviceId, regressionResult.getEvent().id, timespan);
 
-			OOReportRegressedEvent regressedEvent = new OOReportRegressedEvent(pair.getActiveEvent(),
-					pair.getBaseEvent(), OOReportEvent.SEVERE_REGRESSION, arcLink);
+			OOReportRegressedEvent regressedEvent = new OOReportRegressedEvent(regressionResult.getEvent(),
+					regressionResult.getBaselineHits(), regressionResult.getBaselineInvocations(), OOReportEvent.SEVERE_REGRESSION, arcLink);
 
 			result.add(regressedEvent);
 		}
 		
-		for (RegressionPair pair : rateRegression.getAllRegressions().values()) {
+		for (RegressionResult regressionResult : rateRegression.getAllRegressions().values()) {
 
-			if (rateRegression.getCriticalRegressions().containsKey(pair.getActiveEvent().id)) {
+			if (rateRegression.getCriticalRegressions().containsKey(regressionResult.getEvent().id)) {
 				continue;
 			}
 			
-			String arcLink = getArcLink(apiClient, serviceId, pair.getActiveEvent().id, timespan);
+			String arcLink = getArcLink(apiClient, serviceId, regressionResult.getEvent().id, timespan);
 
-			OOReportRegressedEvent regressedEvent = new OOReportRegressedEvent(pair.getActiveEvent(),
-					pair.getBaseEvent(), OOReportEvent.REGRESSION, arcLink);
+			OOReportRegressedEvent regressedEvent = new OOReportRegressedEvent(regressionResult.getEvent(),
+					regressionResult.getBaselineHits(), regressionResult.getBaselineInvocations(), OOReportEvent.REGRESSION, arcLink);
 
 			result.add(regressedEvent);
 		}

@@ -4,19 +4,21 @@ import com.takipi.common.api.result.event.EventResult;
 
 public class OOReportRegressedEvent extends OOReportEvent{
 
-    private final EventResult baseLineEvent;
-
-    public OOReportRegressedEvent(EventResult activeEvent, EventResult baseLineEvent, String type, String arcLink) {
+	private final long baselineHits;
+	private final long baselineInvocations;
+    
+    public OOReportRegressedEvent(EventResult activeEvent, long baselineHits, long baselineInvocations, String type, String arcLink) {
     		
     		super(activeEvent, type, arcLink);
     		
-    		this.baseLineEvent = baseLineEvent;
+    		this.baselineHits = baselineHits;
+    		this.baselineInvocations = baselineInvocations;
     }
     
     @Override
     public String getEventRate() {
     	
-    		double rate = (double)baseLineEvent.stats.hits / (double)baseLineEvent.stats.invocations * 100; 	
+    		double rate = (double)baselineHits / (double)baselineInvocations * 100; 	
     		
     		StringBuilder result = new StringBuilder();
     		result.append(super.getEventRate());
@@ -28,10 +30,10 @@ public class OOReportRegressedEvent extends OOReportEvent{
 	}
     
     public long getBaselineHits() {
-        return baseLineEvent.stats.hits;
+        return baselineHits;
     }
     
     public long getBaselineCalls() {
-        return  baseLineEvent.stats.invocations;
+        return  baselineInvocations;
     }
 }
