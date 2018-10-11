@@ -149,6 +149,10 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 	        return serverWait;
 	    }
 	   
+	   public boolean getverbose() {
+	        return verbose;
+	    }
+	   
 	   public boolean getshowResults() {
 	        return showResults;
 	    }
