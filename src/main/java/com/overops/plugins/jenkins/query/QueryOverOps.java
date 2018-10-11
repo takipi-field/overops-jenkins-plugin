@@ -61,7 +61,9 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 	private final boolean applySeasonality;
 
 	private final int serverWait;
+	
 	private final boolean showResults;
+	private final boolean verbose;
 	
 	private final String serviceId;
 	
@@ -76,7 +78,8 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 			String criticalExceptionTypes,
 			int minVolumeThreshold, double minErrorRateThreshold, 
 			double reggressionDelta, double criticalRegressionDelta, 
-			boolean applySeasonality, boolean markUnstable, boolean showResults, String serviceId,
+			boolean applySeasonality, boolean markUnstable, boolean showResults, 
+			boolean verbose, String serviceId,
 			int serverWait) {
 			
 		 
@@ -98,6 +101,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		this.serviceId = serviceId;
 		
 		this.serverWait = serverWait;
+		this.verbose = verbose;
 		this.showResults = showResults;
 		this.markUnstable = markUnstable;
 	}
@@ -220,7 +224,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		RegressionReport report = RegressionReportBuilder.execute(apiClient, serviceId, 
 			allEventsView.id, activeTimespan, baselineTimespan, criticalExceptionTypes, 
 			minVolumeThreshold, minErrorRateThreshold, reggressionDelta, criticalRegressionDelta,
-			applySeasonality, printStream);
+			applySeasonality, printStream, verbose);
 		
 		OverOpsBuildAction buildAction = new OverOpsBuildAction(report, run);
 		run.addAction(buildAction);

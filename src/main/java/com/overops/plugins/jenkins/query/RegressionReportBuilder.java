@@ -60,7 +60,8 @@ public class RegressionReportBuilder {
 
 	public static RegressionReport execute(ApiClient apiClient, String serviceId, String viewId, int activeTimespan,
 			int baselineTimespan, String criticalExceptionTypes, int minVolumeThreshold, double minErrorRateThreshold,
-			double reggressionDelta, double criticalReggressionDelta, boolean applySeasonality, PrintStream output) {
+			double reggressionDelta, double criticalReggressionDelta, boolean applySeasonality, PrintStream output,
+			boolean verbose) {
 
 		Collection<String> criticalExceptionTypeList;
 
@@ -72,7 +73,8 @@ public class RegressionReportBuilder {
 
 		RateRegression rateRegression = RegressionUtil.calculateRateRegressions(apiClient, serviceId,
 				viewId, activeTimespan, baselineTimespan, minVolumeThreshold, minErrorRateThreshold,
-				reggressionDelta, criticalReggressionDelta, applySeasonality, criticalExceptionTypeList, output);
+				reggressionDelta, criticalReggressionDelta, applySeasonality, criticalExceptionTypeList, 
+				output, verbose);
 		
 		List<OOReportEvent> newIssues = getAllNewEvents(apiClient, serviceId, baselineTimespan, rateRegression);
 		List<OOReportRegressedEvent> regressions = getAllRegressions(apiClient, serviceId, baselineTimespan, rateRegression);

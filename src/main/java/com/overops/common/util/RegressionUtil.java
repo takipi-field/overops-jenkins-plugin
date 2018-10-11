@@ -29,8 +29,6 @@ import com.takipi.common.api.util.Pair;
 
 public class RegressionUtil {
 
-	public static boolean printNonRegressions = false;
-
 	public static class RegressionResult {
 
 		private EventResult event;
@@ -224,7 +222,7 @@ public class RegressionUtil {
 		}
 	}
 
-	private static boolean hasOlderRelatedEvents(EventResult event, PrintStream printStream) {
+	private static boolean hasOlderRelatedEvents(EventResult event, PrintStream printStream, boolean verbose) {
 		if (event.similar_event_ids == null) {
 			return false;
 		}
@@ -236,7 +234,7 @@ public class RegressionUtil {
 		int eventId;
 
 		try {
-			eventId = Integer.valueOf(event.id);
+			eventId = Integer.parseInt(event.id);
 		} catch (Exception e) {
 			return false;
 		}
@@ -245,13 +243,13 @@ public class RegressionUtil {
 			int similarEventId;
 
 			try {
-				similarEventId = Integer.valueOf(event.id);
+				similarEventId =  Integer.parseInt(similarId);
 			} catch (Exception e) {
 				continue;
 			}
 
 			if (eventId > similarEventId) {
-				if (printStream != null) {
+				if ((verbose) && (printStream != null)) {
 					printStream
 							.println("New event " + event.toString() + " has older similar event with ID " + similarId);
 				}
@@ -352,17 +350,14 @@ public class RegressionUtil {
 	}
 
 	private static REGRESSION processNewsIssue(EventResult activeEvent, DateTime activeFrom, int minVolumeThreshold,
-			double minErrorRateThreshold, Collection<String> criticalExceptionTypes, PrintStream printStream,
-			RateRegressionBuilder rateRegression) {
+			double minErrorRateThreshold, Collection<String> criticalExceptionTypes, 
+			RateRegressionBuilder rateRegression, PrintStream printStream, boolean verbose) {
 		DateTime firstSeen = ISODateTimeFormat.dateTimeParser().parseDateTime(activeEvent.first_seen);
 
 		boolean isEventNew = firstSeen.isAfter(activeFrom);
-		boolean hasOlderSmiliarEvent = hasOlderRelatedEvents(activeEvent, printStream);
+		boolean hasOlderSmiliarEvent = hasOlderRelatedEvents(activeEvent, printStream, verbose);
 
 		boolean isNew = (isEventNew) && (!hasOlderSmiliarEvent);
-
-		int minStat = 0;
-		int noStats = 0;
 
 		if (isNew) {
 			rateRegression.addNewEvent(activeEvent.id, activeEvent);
@@ -386,8 +381,8 @@ public class RegressionUtil {
 		}
 
 		if ((activeEvent.stats == null) || (activeEvent.stats.invocations == 0) || (activeEvent.stats.hits == 0)) {
-			if ((printNonRegressions) && (printStream != null)) {
-				printStream.println("No stats " + noStats++ + " " + ps(activeEvent.stats) + printEvent(activeEvent));
+			if ((verbose) && (printStream != null)) {
+				printStream.println("No stats " + ps(activeEvent.stats) + printEvent(activeEvent));
 			}
 			return REGRESSION.NO_DATA;
 		}
@@ -395,9 +390,9 @@ public class RegressionUtil {
 		double activeEventRatio = ((double) activeEvent.stats.hits / (double) activeEvent.stats.invocations);
 
 		if ((activeEventRatio < minErrorRateThreshold) || (activeEvent.stats.hits < minVolumeThreshold)) {
-			if ((printNonRegressions) && (printStream != null)) {
+			if ((verbose) && (printStream != null)) {
 
-				printStream.println("Min thrs " + minStat++ + " " + ps(activeEvent.stats) + printEvent(activeEvent)
+				printStream.println("Min thrs " + ps(activeEvent.stats) + printEvent(activeEvent)
 						+ "fails " + "hits" + activeEvent.stats.hits + "ratio: " + activeEventRatio);
 			}
 
@@ -443,17 +438,14 @@ public class RegressionUtil {
 				}
 			}
 		}
-		
-		if ((largerVolumePriodIndex == -1) || (halfVolumePeriods < 2)) {
-			System.out.println("here");
-		}
 
 		return new SeasonlityResult(largerVolumePeriod, halfVolumePeriods, largerVolumePriodIndex);
 	}
 
 	private static REGRESSION processVolumeRegression(EventResult activeEvent, int activeTimespan, int baselineTimespan,
 			Map<String, RegressionStats> regressionsStats, Map<String, long[]> periodVolumes, double reggressionDelta,
-			double criticalRegressionDelta, boolean applySeasonality, PrintStream printStream, RateRegressionBuilder rateRegression) {
+			double criticalRegressionDelta, boolean applySeasonality, RateRegressionBuilder rateRegression,
+			PrintStream printStream, boolean verbose) {
 		
 		if (reggressionDelta == 0) {
 			return REGRESSION.NO;
@@ -462,7 +454,7 @@ public class RegressionUtil {
 		RegressionStats regressionStats = regressionsStats.get(activeEvent.id);
 
 		if (regressionStats == null) {
-			if  ((printNonRegressions) && (printStream != null)) {
+			if  ((verbose) && (printStream != null)) {
 				printStream.println("No regression stats " + printEvent(activeEvent));
 			}
 			return REGRESSION.NO_DATA;
@@ -481,7 +473,7 @@ public class RegressionUtil {
 		boolean isCriticalRegression = volRateDelta - Math.max(invRateDelta * 2, 0) > criticalRegressionDelta;
 		
 		if (!isRegression) {
-			if  ((printNonRegressions) && (printStream != null)) {
+			if  ((verbose) && (printStream != null)) {
 				printStream.println("Not regressed " + printEvent(activeEvent));
 			}
 			return REGRESSION.NO;
@@ -536,7 +528,7 @@ public class RegressionUtil {
 	public static RateRegression calculateRateRegressions(ApiClient apiClient, String serviceId, String viewId,
 			int activeTimespan, int baselineTimespan, int minVolumeThreshold, double minErrorRateThreshold,
 			double reggressionDelta, double criticalRegressionDelta, boolean applySeasonality, Collection<String> criticalExceptionTypes,
-			PrintStream printStream) {
+			PrintStream printStream, boolean verbose) {
 
 		RateRegressionBuilder result = new RateRegressionBuilder();
 
@@ -544,11 +536,19 @@ public class RegressionUtil {
 		DateTime activeFrom = fromTime.minusMinutes(activeTimespan);
 		DateTime baselineFrom = fromTime.minusMinutes(baselineTimespan);
 
+		if (printStream != null) {
+			printStream.print("Begin regression analysis");
+		}
+		
 		EventsVolumeResult activeEventVolume = ApiViewUtil.getEventsVolume(apiClient, serviceId, viewId, activeFrom,
 				fromTime);
 
+		
 		if ((activeEventVolume == null) || (activeEventVolume.events == null)) {
-			System.out.println("Could not get event volume for " + serviceId + " " + viewId);
+			
+			if (printStream != null) {
+				printStream.println("SEVERE: Could not get event volume for " + serviceId + " " + viewId);
+			}
 
 			return result.build();
 		}
@@ -572,7 +572,7 @@ public class RegressionUtil {
 		for (EventResult activeEvent : activeEventVolume.events) {
 
 			REGRESSION isNewIssue = processNewsIssue(activeEvent, activeFrom, minVolumeThreshold, minErrorRateThreshold,
-					criticalExceptionTypes, printStream, result);
+					criticalExceptionTypes, result, printStream, verbose);
 
 			if (isNewIssue.equals(REGRESSION.YES)) {
 				continue;
@@ -583,10 +583,10 @@ public class RegressionUtil {
 				continue;
 			}
 
-			if (baselineFrom != null) {
+			if (baselineGraph != null) {
 				REGRESSION regResult = processVolumeRegression(activeEvent, activeTimespan, baselineTimespan,
-						regressionsStats, periodVolumes, reggressionDelta, criticalRegressionDelta, applySeasonality, printStream,
-						result);
+						regressionsStats, periodVolumes, reggressionDelta, criticalRegressionDelta, applySeasonality,
+						result, printStream, verbose);
 
 				if (!regResult.equals(REGRESSION.YES)) {
 					nonRegressions.add(activeEvent);
@@ -594,13 +594,16 @@ public class RegressionUtil {
 			}
 		}
 
-		printNonRegressions(nonRegressions, printStream);
+		if (verbose) {
+			printNonRegressions(nonRegressions, printStream);
+		}
+		
 
 		return result.build();
 	}
 
 	private static void printNonRegressions(List<EventResult> nonRegressions, PrintStream printStream) {
-		if ((printNonRegressions) && (printStream != null)) {
+		if (printStream != null) {
 
 			nonRegressions.sort(new Comparator<EventResult>() {
 
