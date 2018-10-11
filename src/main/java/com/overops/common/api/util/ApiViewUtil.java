@@ -2,30 +2,37 @@ package com.overops.common.api.util;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 
+import com.google.common.collect.Maps;
 import com.takipi.common.api.ApiClient;
+import com.takipi.common.api.data.metrics.Graph;
 import com.takipi.common.api.data.view.SummarizedView;
 import com.takipi.common.api.data.view.ViewFilters;
 import com.takipi.common.api.data.view.ViewInfo;
+import com.takipi.common.api.request.category.CategoryAddViewRequest;
+import com.takipi.common.api.request.metrics.GraphRequest;
 import com.takipi.common.api.request.view.CreateViewRequest;
 import com.takipi.common.api.request.view.ViewsRequest;
 import com.takipi.common.api.request.volume.EventsVolumeRequest;
+import com.takipi.common.api.result.EmptyResult;
+import com.takipi.common.api.result.metrics.GraphResult;
 import com.takipi.common.api.result.view.CreateViewResult;
 import com.takipi.common.api.result.view.ViewsResult;
 import com.takipi.common.api.result.volume.EventsVolumeResult;
 import com.takipi.common.api.url.UrlClient.Response;
+import com.takipi.common.api.util.CollectionUtil;
 import com.takipi.common.api.util.Pair;
+import com.takipi.common.api.util.ValidationUtil.GraphType;
 import com.takipi.common.api.util.ValidationUtil.VolumeType;
 
 public class ApiViewUtil {
 	public static void createLabelViewsIfNotExists(ApiClient apiClient, String serviceId,
-			Collection<Pair<String, String>> viewsAndLabels) {
+			Collection<Pair<String, String>> viewsAndLabels, String categoryId) {
 		Map<String, SummarizedView> views = getServiceViewsByName(apiClient, serviceId);
 
 		for (Pair<String, String> pair : viewsAndLabels) {
@@ -45,6 +52,7 @@ public class ApiViewUtil {
 			viewInfo.name = viewName;
 			viewInfo.filters = new ViewFilters();
 			viewInfo.filters.labels = Collections.singletonList(labelName);
+			viewInfo.shared = true;
 
 			CreateViewRequest createViewRequest = CreateViewRequest.newBuilder().setServiceId(serviceId)
 					.setViewInfo(viewInfo).build();
@@ -53,8 +61,19 @@ public class ApiViewUtil {
 
 			if ((viewResponse.isBadResponse()) || (viewResponse.data == null)) {
 				System.err.println("Cannot create view " + viewName);
+
+				continue;
 			} else {
 				System.out.println("Created view " + viewResponse.data.view_id + " for label " + labelName);
+			}
+
+			CategoryAddViewRequest categoryAddViewRequest = CategoryAddViewRequest.newBuilder().setServiceId(serviceId)
+					.setViewId(viewResponse.data.view_id).setCategoryId(categoryId).build();
+
+			Response<EmptyResult> categoryAddViewResponse = apiClient.post(categoryAddViewRequest);
+
+			if (categoryAddViewResponse.isBadResponse()) {
+				System.out.println("Error adding view " + viewName + " to category " + categoryId);
 			}
 		}
 	}
@@ -69,7 +88,7 @@ public class ApiViewUtil {
 			return Collections.emptyMap();
 		}
 
-		Map<String, SummarizedView> result = new HashMap<String, SummarizedView>();
+		Map<String, SummarizedView> result = Maps.newHashMap();
 
 		for (SummarizedView view : viewsResponse.data.views) {
 			result.put(view.name, view);
@@ -93,9 +112,10 @@ public class ApiViewUtil {
 		return result;
 	}
 
+	private static final DateTimeFormatter fmt = ISODateTimeFormat.dateTime().withZoneUTC();
+
 	public static EventsVolumeResult getEventsVolume(ApiClient apiClient, String serviceId, String viewId,
 			DateTime from, DateTime to) {
-		DateTimeFormatter fmt = ISODateTimeFormat.dateTime().withZoneUTC();
 
 		EventsVolumeRequest eventsVolumeRequest = EventsVolumeRequest.newBuilder().setServiceId(serviceId)
 				.setViewId(viewId).setFrom(from.toString(fmt)).setTo(to.toString(fmt)).setVolumeType(VolumeType.all)
@@ -104,15 +124,56 @@ public class ApiViewUtil {
 		Response<EventsVolumeResult> eventsVolumeResponse = apiClient.get(eventsVolumeRequest);
 
 		if (eventsVolumeResponse.isBadResponse()) {
-			throw new IllegalStateException("Can't create events volume.");
+			return null;
 		}
 
 		EventsVolumeResult eventsVolumeResult = eventsVolumeResponse.data;
 
 		if (eventsVolumeResult == null) {
-			throw new IllegalStateException("Missing events volume result.");
+			return null;
+		}
+
+		if (eventsVolumeResult.events == null) {
+			return null;
 		}
 
 		return eventsVolumeResult;
+	}
+
+	public static Graph getEventsGraph(ApiClient apiClient, String serviceId, String viewId, int pointsCount,
+			DateTime from, DateTime to) {
+		DateTimeFormatter fmt = ISODateTimeFormat.dateTime().withZoneUTC();
+
+		GraphRequest graphRequest = GraphRequest.newBuilder().setServiceId(serviceId).setViewId(viewId)
+				.setGraphType(GraphType.view).setFrom(from.toString(fmt)).setTo(to.toString(fmt))
+				.setVolumeType(VolumeType.all).setWantedPointCount(pointsCount).build();
+
+		Response<GraphResult> graphResponse = apiClient.get(graphRequest);
+
+		if (graphResponse.isBadResponse()) {
+			return null;
+		}
+
+		GraphResult graphResult = graphResponse.data;
+
+		if (graphResult == null) {
+			return null;
+		}
+
+		if (CollectionUtil.safeIsEmpty(graphResult.graphs)) {
+			return null;
+		}
+
+		Graph graph = graphResult.graphs.get(0);
+
+		if (!viewId.equals(graph.id)) {
+			return null;
+		}
+
+		if (CollectionUtil.safeIsEmpty(graph.points)) {
+			return null;
+		}
+
+		return graph;
 	}
 }
