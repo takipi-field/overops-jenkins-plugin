@@ -47,8 +47,6 @@ import jenkins.tasks.SimpleBuildStep;
 
 public class QueryOverOps extends Recorder implements SimpleBuildStep {
 	
-	
-	
 	private final int activeTimespan;
 	private final int baselineTimespan;
 
@@ -59,9 +57,13 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 
 	private final double reggressionDelta;
 	private final double criticalRegressionDelta;
+	
+	private final boolean applySeasonality;
 
 	private final int serverWait;
+	
 	private final boolean showResults;
+	private final boolean verbose;
 	
 	private final String serviceId;
 	
@@ -76,7 +78,8 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 			String criticalExceptionTypes,
 			int minVolumeThreshold, double minErrorRateThreshold, 
 			double reggressionDelta, double criticalRegressionDelta, 
-			boolean markUnstable, boolean showResults, String serviceId,
+			boolean applySeasonality, boolean markUnstable, boolean showResults, 
+			boolean verbose, String serviceId,
 			int serverWait) {
 			
 		 
@@ -91,12 +94,14 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		this.minErrorRateThreshold = minErrorRateThreshold;
 		this.minVolumeThreshold = minVolumeThreshold;
 
+		this.applySeasonality = applySeasonality;
 		this.reggressionDelta = reggressionDelta;
 		this.criticalRegressionDelta = criticalRegressionDelta;
 
 		this.serviceId = serviceId;
 		
 		this.serverWait = serverWait;
+		this.verbose = verbose;
 		this.showResults = showResults;
 		this.markUnstable = markUnstable;
 	}
@@ -144,6 +149,10 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 	        return serverWait;
 	    }
 	   
+	   public boolean getverbose() {
+	        return verbose;
+	    }
+	   
 	   public boolean getshowResults() {
 	        return showResults;
 	    }
@@ -168,6 +177,14 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		String apiHost = getDescriptor().getOverOpsURL();
 		String apiKey = Secret.toString(getDescriptor().getOverOpsAPIKey());
 		
+		if (apiHost == null) {
+			throw new IllegalArgumentException("Missing host name");
+		} 
+		
+		if (apiKey == null) {
+			throw new IllegalArgumentException("Missing api key");
+		}
+		
 		String serviceId;
 		
 		if ((this.serviceId != null) && (!this.serviceId.isEmpty()))
@@ -177,6 +194,10 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		else
 		{
 			serviceId = getDescriptor().getOverOpsSID();
+		}
+		
+		if (serviceId == null) {
+			throw new IllegalArgumentException("Missing environment Id");
 		}
 		
 		PrintStream printStream;
@@ -207,7 +228,7 @@ public class QueryOverOps extends Recorder implements SimpleBuildStep {
 		RegressionReport report = RegressionReportBuilder.execute(apiClient, serviceId, 
 			allEventsView.id, activeTimespan, baselineTimespan, criticalExceptionTypes, 
 			minVolumeThreshold, minErrorRateThreshold, reggressionDelta, criticalRegressionDelta,
-			printStream);
+			applySeasonality, printStream, verbose);
 		
 		OverOpsBuildAction buildAction = new OverOpsBuildAction(report, run);
 		run.addAction(buildAction);

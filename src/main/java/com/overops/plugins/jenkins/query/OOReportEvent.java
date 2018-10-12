@@ -42,11 +42,21 @@ public class OOReportEvent {
 	public String getEventRate() {
 		StringBuilder result = new StringBuilder();
 		
+		if ((event.stats.invocations == 0) || (event.stats.hits == 0 )) {
+			return "1";
+		}
+		
 		double rate = (double)event.stats.hits / (double)event.stats.invocations * 100; 	
 		
 		result.append(event.stats.hits);
+		result.append("/");
+		result.append(event.stats.invocations);
 		result.append(" (");
-		result.append(decimalFormat.format(rate));
+		String fmt = decimalFormat.format(rate);
+		if (fmt.startsWith(".")) {
+			result.append("0");
+		}
+ 		result.append(fmt);
 		result.append("%)");
 		
 		return result.toString();
