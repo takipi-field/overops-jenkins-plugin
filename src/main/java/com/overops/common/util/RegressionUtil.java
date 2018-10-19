@@ -532,7 +532,7 @@ public class RegressionUtil {
 
 		RateRegressionBuilder result = new RateRegressionBuilder();
 
-		DateTime fromTime = DateTime.now().minusWeeks(1);
+		DateTime fromTime = DateTime.now();
 		DateTime activeFrom = fromTime.minusMinutes(activeTimespan);
 		DateTime baselineFrom = fromTime.minusMinutes(baselineTimespan);
 
